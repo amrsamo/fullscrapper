@@ -255,6 +255,8 @@ function getMyUser()
 	// $users[]= 'instadev89.3';
 	$users[]= 'instadev89.4';
 	$users[]= 'instadev89.5';
+	$users[]= 'instadev89.6';
+	$users[]= 'instadev89.7';
 
 
 	$user_index = file_get_contents('user.txt');
