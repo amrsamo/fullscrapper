@@ -250,9 +250,9 @@ vscousa
 function getMyUser()
 {
 	$users = array();
-	$users[]= 'instadev89.1';
-	$users[]= 'instadev89.2';
-	$users[]= 'instadev89.3';
+	// $users[]= 'instadev89.1';
+	// $users[]= 'instadev89.2';
+	// $users[]= 'instadev89.3';
 	$users[]= 'instadev89.4';
 	$users[]= 'instadev89.5';
 
