@@ -42,102 +42,81 @@ try {
     // getUserFollowers($userId,$maxId = null)
     //setProxy($value)
     
-   	$hashtag = getMyHashtag();
+   	// $hashtag = getMyHashtag();
 
-	$logged_in = false;
-
-	// foreach ($hashtags as $hashtag) {
-	// 	$hashtag = trim($hashtag);
-		
-		//SET USER
-		$username = getMyUser();
-		$password = 'Password1';
-
-		// if($logged_in)
-		// {
-		// 	$ig->logout();
-		// }
-		
-		$ig->setUser($username, $password);
-    	$ig->login();
-
-    	$logged_in = true;
-
-    	//SET PROXY
-		$proxy = getMyProxy();
-		$ig->setProxy(array('CURLOPT_PROXY'=>$proxy['proxy'],'CURLOPT_PROXYPORT'=>$proxy['port']));
-		
-		// $hashtag = 'food';
-		$result = $ig->getHashtagFeed($hashtag);
+	// $logged_in = false;
 
 
-		$next_max_id = $result->next_max_id;
+	$username = getMyUser();
+	$password = 'Password1';
 
-		$count = 0;
+	$ig->setUser($username, $password);
+    $ig->login();
 
-		while($next_max_id != null)
-		{
-			foreach ($result->ranked_items as $item) {
-				
-				$user_id = $item->user->pk;
-				$user = $ig->getUserInfoById($user_id);
-
-
-				$user_data = array();
-		        $user_data['username'] = $user->user->username;
-		        $user_data['url'] = 'https://www.instagram.com/'.$user->user->username.'/';
-		        $user_data['followers'] = $user->user->follower_count;
-		        $user_data['hashtag']       = $hashtag;
-		        $user_data['externalUrl']       = $user->user->external_url;
-		        $user_data['instagram_unique_id']       = $user->user->pk;
-		        $user_data['fullName']       = $user->user->full_name;
-		        $user_data['profilePicUrl']       = $user->user->hd_profile_pic_versions[0]->url;
-		        $user_data['biography']       = $user->user->biography;
-		        $user_data['followsCount']       = $user->user->following_count;
-		        $user_data['mediaCount']       = $user->user->media_count;
-
-
-				if($user->user->public_email){
-					$mails = array();
-					$mails[] = $user->user->public_email;
-					saveMails($mails,$user_data);
-				}
-				else
-				{
-					saveMails(getMails($user->user->biography),$user_data);
-				}
-			}
-
-			// echo '<h1>HERE -  '.$count.'</h1>';
-			// $count++;
-			// printme($result);
-
-
-			//SET PROXY
-			$proxy = getMyProxy();
-			$ig->setProxy(array('CURLOPT_PROXY'=>$proxy['proxy'],'CURLOPT_PROXYPORT'=>$proxy['port']));
-			$ig->logout();
-
-			$username = getMyUser();
-			$ig->setUser($username, $password);
-    		$ig->login();
-
-    		// echo '<h1>old HERE -  '.$count.'</h1>';
-    		// printme($result);
-			$result = $ig->getHashtagFeed($hashtag,$next_max_id);
-			$result->ranked_items = $result->items;
-			// echo '<h1>new HERE -  '.$count.'</h1>';
-			// printme($result);
-			// exit();
-			$next_max_id = $result->next_max_id;
-
-		}
-		
-		// exit();
-
-	// }
-
+    
 	
+	//GET ALL RELATED LOCATIONS
+    $locations = $ig->searchFBLocation('australia');
+
+    foreach ($locations->fullResponse->items as $location) 
+    {
+
+    	$location_name = $location->location->name;
+    	$location_id = $location->location->pk;
+
+
+
+    	//GET THIS LOCATION FEED
+    	$result = $ig->getLocationFeed($location_id);
+
+    	foreach ($result->items as $item) {
+    		
+
+    		$proxy = getMyProxy();
+			$ig->setProxy(array('CURLOPT_PROXY'=>$proxy['proxy'],'CURLOPT_PROXYPORT'=>$proxy['port']));
+
+			// printme($item);
+			// exit();
+			$username = getMyUser();
+			$password = 'Password1';
+			$ig->logout();
+			$ig->setUser($username, $password);
+		    $ig->login();
+
+    		$user_id = $item->user->pk;
+    		$user = $ig->getUserInfoById($user_id);
+
+
+    		$user_data = array();
+	        $user_data['username'] = $user->user->username;
+	        $user_data['url'] = 'https://www.instagram.com/'.$user->user->username.'/';
+	        $user_data['followers'] = $user->user->follower_count;
+	        $user_data['hashtag']       = 'australia';
+	        $user_data['externalUrl']       = $user->user->external_url;
+	        $user_data['instagram_unique_id']       = $user->user->pk;
+	        $user_data['fullName']       = $user->user->full_name;
+	        $user_data['profilePicUrl']       = $user->user->hd_profile_pic_versions[0]->url;
+	        $user_data['biography']       = $user->user->biography;
+	        $user_data['followsCount']       = $user->user->following_count;
+	        $user_data['mediaCount']       = $user->user->media_count;
+
+
+	        if($user->user->public_email)
+	        {
+				$mails = array();
+				$mails[] = $user->user->public_email;
+				saveMails($mails,$user_data);
+			}
+			else
+			{
+				saveMails(getMails($user->user->biography),$user_data);
+			}
+    		
+    	}
+    	
+
+    }
+    
 } catch (\Exception $e) {
     echo 'Something went wrong: '.$e->getMessage()."\n";
 }
@@ -347,10 +326,10 @@ function getMyProxy()
 	$proxyies[] = '104.140.209.173:3128';
 	$proxyies[] = '192.126.157.47:3128';
 
+
 	$proxy_index = file_get_contents('proxy.txt');
 	$proxy_index = intval($proxy_index);
 
-	printme($proxy_index);
 	$proxy = $proxyies[$proxy_index];
 	$proxy = explode(":",$proxy);
 
