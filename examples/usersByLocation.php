@@ -78,6 +78,7 @@ try {
     		foreach ($result->items as $item)
     		{
     			$user_id = $item->user->pk;
+    			$followers_list[] = $user_id;
     			$user_followers = $ig->getUserFollowers($user_id);
     			while($user_followers->big_list == 1)
     			{	
@@ -91,8 +92,9 @@ try {
     			}
 
     			saveMyFollowers($followers_list);
-
-	    		$proxy = getMyProxy();
+	    		
+	    	}
+	    	 	$proxy = getMyProxy();
 				$ig->setProxy(array('CURLOPT_PROXY'=>$proxy['proxy'],'CURLOPT_PROXYPORT'=>$proxy['port']));
 
 				$username = getMyUser();
@@ -100,13 +102,6 @@ try {
 				$ig->logout();
 				$ig->setUser($username, $password);
 			    $ig->login();
-
-	    		$user_id = $item->user->pk;
-	    		$user = $ig->getUserInfoById($user_id);
-
-	    		saveMyUser($user);
-	    		
-	    	}
     		$next_max_id = $result->next_max_id;
     		$result = $ig->getLocationFeed($location_id,$next_max_id);
     	}	
@@ -148,7 +143,7 @@ function saveMyFollowers($list)
 
     foreach ($list as $user) {
     	$sql = 'INSERT INTO australia_followers (user_id)
-                    VALUES ("'.$user.'"")';
+                    VALUES ("'.$user.'")';
 
         if (mysqli_query($conn, $sql)) {
             echo "New record created successfully";
