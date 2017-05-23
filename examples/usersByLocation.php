@@ -148,7 +148,7 @@ function saveMyFollowers($list)
 
     foreach ($list as $user) {
     	$sql = 'INSERT INTO australia_followers (user_id)
-                    VALUES ('.$user.')';
+                    VALUES ("'.$user.'"")';
 
         if (mysqli_query($conn, $sql)) {
             echo "New record created successfully";
