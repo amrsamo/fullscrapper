@@ -69,50 +69,61 @@ try {
     	//GET THIS LOCATION FEED
     	$result = $ig->getLocationFeed($location_id);
 
-    	foreach ($result->items as $item) {
+    	$count=1;
+    	while($result->more_available == 1)
+    	{	
     		
+    		foreach ($result->items as $item)
+    		{
 
-    		$proxy = getMyProxy();
-			$ig->setProxy(array('CURLOPT_PROXY'=>$proxy['proxy'],'CURLOPT_PROXYPORT'=>$proxy['port']));
+	    		$proxy = getMyProxy();
+				$ig->setProxy(array('CURLOPT_PROXY'=>$proxy['proxy'],'CURLOPT_PROXYPORT'=>$proxy['port']));
 
-			// printme($item);
-			// exit();
-			$username = getMyUser();
-			$password = 'Password1';
-			$ig->logout();
-			$ig->setUser($username, $password);
-		    $ig->login();
+				// printme($item);
+				// exit();
+				$username = getMyUser();
+				$password = 'Password1';
+				$ig->logout();
+				$ig->setUser($username, $password);
+			    $ig->login();
 
-    		$user_id = $item->user->pk;
-    		$user = $ig->getUserInfoById($user_id);
-
-
-    		$user_data = array();
-	        $user_data['username'] = $user->user->username;
-	        $user_data['url'] = 'https://www.instagram.com/'.$user->user->username.'/';
-	        $user_data['followers'] = $user->user->follower_count;
-	        $user_data['hashtag']       = 'australia';
-	        $user_data['externalUrl']       = $user->user->external_url;
-	        $user_data['instagram_unique_id']       = $user->user->pk;
-	        $user_data['fullName']       = $user->user->full_name;
-	        $user_data['profilePicUrl']       = $user->user->hd_profile_pic_versions[0]->url;
-	        $user_data['biography']       = $user->user->biography;
-	        $user_data['followsCount']       = $user->user->following_count;
-	        $user_data['mediaCount']       = $user->user->media_count;
+	    		$user_id = $item->user->pk;
+	    		$user = $ig->getUserInfoById($user_id);
 
 
-	        if($user->user->public_email)
-	        {
-				$mails = array();
-				$mails[] = $user->user->public_email;
-				saveMails($mails,$user_data);
-			}
-			else
-			{
-				saveMails(getMails($user->user->biography),$user_data);
-			}
-    		
-    	}
+	    		$user_data = array();
+		        $user_data['username'] = $user->user->username;
+		        $user_data['url'] = 'https://www.instagram.com/'.$user->user->username.'/';
+		        $user_data['followers'] = $user->user->follower_count;
+		        $user_data['hashtag']       = 'australia';
+		        $user_data['externalUrl']       = $user->user->external_url;
+		        $user_data['instagram_unique_id']       = $user->user->pk;
+		        $user_data['fullName']       = $user->user->full_name;
+		        $user_data['profilePicUrl']       = $user->user->hd_profile_pic_versions[0]->url;
+		        $user_data['biography']       = $user->user->biography;
+		        $user_data['followsCount']       = $user->user->following_count;
+		        $user_data['mediaCount']       = $user->user->media_count;
+
+
+		        if($user->user->public_email)
+		        {
+					$mails = array();
+					$mails[] = $user->user->public_email;
+					saveMails($mails,$user_data);
+				}
+				else
+				{
+					saveMails(getMails($user->user->biography),$user_data);
+				}
+	    		
+	    	}
+    		$next_max_id = $result->next_max_id;
+    		$result = $ig->getLocationFeed($location_id,$next_max_id);
+    	}	
+    	
+
+
+    	
     	
 
     }
