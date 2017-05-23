@@ -57,7 +57,7 @@ try {
 	
 	//GET ALL RELATED LOCATIONS
     $locations = $ig->searchFBLocation('australia');
-
+    $followers_list = array();
     foreach ($locations->fullResponse->items as $location) 
     {
 
@@ -69,18 +69,32 @@ try {
     	//GET THIS LOCATION FEED
     	$result = $ig->getLocationFeed($location_id);
 
+    	
+    	
     	$count=1;
     	while($result->more_available == 1)
     	{	
-    		
+
     		foreach ($result->items as $item)
     		{
+    			$user_id = $item->user->pk;
+    			$user_followers = $ig->getUserFollowers($user_id);
+    			while($user_followers->big_list == 1)
+    			{	
+    				
+    				foreach ($user_followers->users as $follower)
+    				{
+
+    					$followers_list[] = $follower->pk;
+	    			}
+    				$user_followers = $ig->getUserFollowers($user_id,$user_followers->next_max_id);
+    			}
+
+    			saveMyFollowers($followers_list);
 
 	    		$proxy = getMyProxy();
 				$ig->setProxy(array('CURLOPT_PROXY'=>$proxy['proxy'],'CURLOPT_PROXYPORT'=>$proxy['port']));
 
-				// printme($item);
-				// exit();
 				$username = getMyUser();
 				$password = 'Password1';
 				$ig->logout();
@@ -90,41 +104,12 @@ try {
 	    		$user_id = $item->user->pk;
 	    		$user = $ig->getUserInfoById($user_id);
 
-
-	    		$user_data = array();
-		        $user_data['username'] = $user->user->username;
-		        $user_data['url'] = 'https://www.instagram.com/'.$user->user->username.'/';
-		        $user_data['followers'] = $user->user->follower_count;
-		        $user_data['hashtag']       = 'australia';
-		        $user_data['externalUrl']       = $user->user->external_url;
-		        $user_data['instagram_unique_id']       = $user->user->pk;
-		        $user_data['fullName']       = $user->user->full_name;
-		        $user_data['profilePicUrl']       = $user->user->hd_profile_pic_versions[0]->url;
-		        $user_data['biography']       = $user->user->biography;
-		        $user_data['followsCount']       = $user->user->following_count;
-		        $user_data['mediaCount']       = $user->user->media_count;
-
-
-		        if($user->user->public_email)
-		        {
-					$mails = array();
-					$mails[] = $user->user->public_email;
-					saveMails($mails,$user_data);
-				}
-				else
-				{
-					saveMails(getMails($user->user->biography),$user_data);
-				}
+	    		saveMyUser($user);
 	    		
 	    	}
     		$next_max_id = $result->next_max_id;
     		$result = $ig->getLocationFeed($location_id,$next_max_id);
     	}	
-    	
-
-
-    	
-    	
 
     }
     
@@ -133,6 +118,74 @@ try {
 }
 
 
+function saveMyFollowers($list)
+{
+	$HTTP_HOST = $_SERVER['HTTP_HOST'];
+
+    if($HTTP_HOST == 'localhost')
+    {
+        //Development
+        $servername = "localhost";
+        $username = "root";
+        $password = "root";
+        $dbname = "insta_mails";
+    }
+    else
+    {
+        //Production
+        $servername = "localhost";
+        $username = "root";
+        $password = ".?R](%B=<NE,6'g";
+        $dbname = "insta_mails";
+    }
+
+    // Create connection
+    $conn = mysqli_connect($servername, $username, $password, $dbname);
+    // Check connection
+    if (!$conn) {
+        die("Connection failed: " . mysqli_connect_error());
+    }
+
+    foreach ($list as $user) {
+    	$sql = 'INSERT INTO australia_followers (user_id)
+                    VALUES ('.$user.')';
+
+        if (mysqli_query($conn, $sql)) {
+            echo "New record created successfully";
+        } else {
+            echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+        }
+    }
+    
+}
+
+function saveMyUser($user)
+{
+	$user_data = array();
+    $user_data['username'] = $user->user->username;
+    $user_data['url'] = 'https://www.instagram.com/'.$user->user->username.'/';
+    $user_data['followers'] = $user->user->follower_count;
+    $user_data['hashtag']       = 'australia';
+    $user_data['externalUrl']       = $user->user->external_url;
+    $user_data['instagram_unique_id']       = $user->user->pk;
+    $user_data['fullName']       = $user->user->full_name;
+    $user_data['profilePicUrl']       = $user->user->hd_profile_pic_versions[0]->url;
+    $user_data['biography']       = $user->user->biography;
+    $user_data['followsCount']       = $user->user->following_count;
+    $user_data['mediaCount']       = $user->user->media_count;
+
+
+    if($user->user->public_email)
+    {
+		$mails = array();
+		$mails[] = $user->user->public_email;
+		saveMails($mails,$user_data);
+	}
+	else
+	{
+		saveMails(getMails($user->user->biography),$user_data);
+	}
+}
 
 function getMyHashtag()
 {
@@ -429,40 +482,10 @@ function saveMails($data, $user_data)
         $user_data['location'] = '';
         $user_data['country'] = '';
         $user_data['city'] = '';
-
-
-    $sql = "select id from mails_scrap where username='".$user_data['username']."' ";
-    $result = mysqli_query($conn, $sql);
-    $rowcount=mysqli_num_rows($result);
-
-    $sql = "select id from mails_scrap_2 where username='".$user_data['username']."' ";
-    $result = mysqli_query($conn, $sql);
-    $rowcount_1=mysqli_num_rows($result);
-    if($rowcount != 1 && $rowcount_1 != 1)
-    {
+    
         foreach ($data as $mail) {
-            // $sql = "INSERT INTO mails_scrap_2 (email,username,url,followers,hashtag, externalUrl, location,instagram_unique_id,fullName,profilePicUrl ,biography,followsCount,mediaCount,isPrivate,isVerified,country,city)
-            //         VALUES ('".$mail."','".$user_data['username'].
-            //                    "','".$user_data['url'].
-            //                    "',".$user_data['followers'].",
-            //                    '".$user_data['hashtag']."',
-            //                    '".$user_data['externalUrl']."',
-            //                    '".$user_data['location']."',
-            //                    '".$user_data['instagram_unique_id']."',
-            //                    '".$user_data['fullName']."',
-            //                    '".$user_data['profilePicUrl']."',
-            //                    '".$user_data['biography']."',
-            //                    '".$user_data['followsCount']."',
-            //                    '".$user_data['mediaCount']."',
-            //                    '".$isPrivate."',
-            //                    '".$isVerified."',
-            //                    '".$user_data['country']."',
-            //                    '".$user_data['city']."'
 
-
-            //                 )";
-        
-            $sql = 'INSERT INTO mails_scrap_2 (email,username,url,followers,hashtag, externalUrl, location,instagram_unique_id,fullName,profilePicUrl ,biography,followsCount,mediaCount,isPrivate,isVerified,country,city)
+            $sql = 'INSERT INTO mails_scrap_australia (email,username,url,followers,hashtag, externalUrl, location,instagram_unique_id,fullName,profilePicUrl ,biography,followsCount,mediaCount,isPrivate,isVerified,country,city)
                     VALUES (
                         "'.$mail.'",
                         "'.$user_data['username'].'",
@@ -490,7 +513,6 @@ function saveMails($data, $user_data)
                 echo "Error: " . $sql . "<br>" . mysqli_error($conn);
             }
         }
-    }
 
     $conn->close();
 }
