@@ -72,7 +72,7 @@ $ids = array();
             elseif ($row[$j] != ""){
                 if($j == 1)
                 {
-                    $value = clean($row[$j]);
+                    $value = $row[$j];
                 }
                 elseif($j == 7)
                 {
