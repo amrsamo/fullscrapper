@@ -70,9 +70,9 @@ $ids = array();
             if(!isset($row[$j]))
                 $schema_insert .= "NULL".$sep;
             elseif ($row[$j] != ""){
-                if($j == 1)
+                if($j == 11)
                 {
-                    $value = $row[$j];
+                    $value = clean($row[$j]);
                 }
                 elseif($j == 7)
                 {
