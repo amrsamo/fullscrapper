@@ -179,7 +179,7 @@ $ids = array();
             $dbname = "insta_mails";
         }
 
-        $sql = "update mails_scrap set conner = -1 where id in ('$ids')";
+        $sql = "update mails_scrap_2 set conner = -1 where id in ('$ids')";
 
 
 
