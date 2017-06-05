@@ -7,7 +7,7 @@ if(isset($_GET['limit']))
 else
     $limit = 5000;
 
-$sql = " SELECT * FROM `mails_scrap_australia` where email not like '%na_%' and export = 0 and followers >= 5000 ORDER BY followers DESC limit $limit
+$sql = " SELECT * FROM `mails_scrap_australia` where email not like '%na_%' and export = 0 and followers >= 2000 ORDER BY followers DESC limit $limit
 ";
 
     $HTTP_HOST = $_SERVER['HTTP_HOST'];
